@@ -1,9 +1,15 @@
+// controllers/contactsController.js
 import Contact from "../models/Contact.js";
+import connectToDatabase from "../utils/db.js";
 
-// @desc    Post a new contact message
-// @route   POST /api/contacts
+// -------------------- Contact Messages --------------------
+
+// Post a new contact message
 export const postContact = async (req, res) => {
   try {
+    console.log("📢 postContact called");
+    await connectToDatabase(process.env.MONGO_URI);
+
     const { name, email, message } = req.body;
 
     if (!name || !email || !message) {
@@ -13,47 +19,60 @@ export const postContact = async (req, res) => {
     const contact = new Contact({ name, email, message });
     await contact.save();
 
+    console.log("✅ Contact message saved:", contact._id);
     res.status(201).json({ message: "Contact message submitted successfully", contact });
   } catch (error) {
+    console.error("❌ postContact error:", error.message || error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Get all contact messages (Admin only)
-// @route   GET /api/contacts
+// Get all contact messages (Admin only)
 export const getAllContacts = async (req, res) => {
   try {
+    console.log("📢 getAllContacts called");
+    await connectToDatabase(process.env.MONGO_URI);
+
     const contacts = await Contact.find().sort({ createdAt: -1 });
+    console.log(`✅ Fetched ${contacts.length} contacts`);
     res.json(contacts);
   } catch (error) {
+    console.error("❌ getAllContacts error:", error.message || error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Delete a contact message (Admin only)
-// @route   DELETE /api/contacts/:id
+// Delete a contact message (Admin only)
 export const deleteContact = async (req, res) => {
   try {
-    if (!req.user.isAdmin) {
+    console.log(`📢 deleteContact called for contactId: ${req.params.id}`);
+    await connectToDatabase(process.env.MONGO_URI);
+
+    if (!req.user?.isAdmin) {
       return res.status(403).json({ message: "Only admins can delete contacts" });
     }
 
     const contact = await Contact.findById(req.params.id);
     if (!contact) {
+      console.warn("🚫 Contact not found:", req.params.id);
       return res.status(404).json({ message: "Contact not found" });
     }
 
     await contact.deleteOne();
+    console.log("✅ Contact deleted:", contact._id);
     res.json({ message: "Contact deleted successfully" });
   } catch (error) {
+    console.error("❌ deleteContact error:", error.message || error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc Create new contact message
-// @route POST /api/contact
+// Create new contact message (alternative route)
 export const createMessage = async (req, res) => {
   try {
+    console.log("📢 createMessage called");
+    await connectToDatabase(process.env.MONGO_URI);
+
     const { name, email, subject, message } = req.body;
 
     if (!name || !email || !subject || !message) {
@@ -63,35 +82,33 @@ export const createMessage = async (req, res) => {
     const newMessage = new Contact({ name, email, subject, message });
     await newMessage.save();
 
+    console.log("✅ Message sent successfully:", newMessage._id);
     res.status(201).json({ message: "Message sent successfully!" });
   } catch (error) {
+    console.error("❌ createMessage error:", error.message || error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// // @desc Get all messages (Admin only)
-// // @route GET /api/contact
-// export const getMessages = async (req, res) => {
-//   try {
-//     const messages = await Contact.find().sort({ createdAt: -1 });
-//     res.json(messages);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
-// @desc Mark message as read (Admin)
-// @route PUT /api/contact/:id/read
+// Mark message as read (Admin)
 export const markAsRead = async (req, res) => {
   try {
+    console.log(`📢 markAsRead called for contactId: ${req.params.id}`);
+    await connectToDatabase(process.env.MONGO_URI);
+
     const message = await Contact.findById(req.params.id);
-    if (!message) return res.status(404).json({ message: "Message not found" });
+    if (!message) {
+      console.warn("🚫 Message not found:", req.params.id);
+      return res.status(404).json({ message: "Message not found" });
+    }
 
     message.isRead = true;
     await message.save();
 
+    console.log("✅ Message marked as read:", message._id);
     res.json({ message: "Message marked as read" });
   } catch (error) {
+    console.error("❌ markAsRead error:", error.message || error);
     res.status(500).json({ message: error.message });
   }
 };

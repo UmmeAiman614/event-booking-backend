@@ -1,24 +1,31 @@
 // controllers/userController.js
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
+import connectToDatabase from "../utils/db.js";
 
-// @desc    Get all users
-// @route   GET /api/users
-// @access  Admin
+// -------------------- Users --------------------
+
+// Get all users (Admin only)
 export const getAllUsers = async (req, res) => {
   try {
+    console.log("📢 getAllUsers called");
+    await connectToDatabase(process.env.MONGO_URI);
+
     const users = await User.find().select("-password"); // exclude password
+    console.log(`✅ Found ${users.length} users`);
     res.status(200).json(users);
   } catch (error) {
+    console.error("❌ getAllUsers error:", error.message || error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
-// @desc    Create a new user
-// @route   POST /api/users
-// @access  Admin
+// Create a new user (Admin only)
 export const createUser = async (req, res) => {
   try {
+    console.log("📢 createUser called");
+    await connectToDatabase(process.env.MONGO_URI);
+
     const { name, email, password, role } = req.body;
 
     if (!name || !email || !password) {
@@ -42,18 +49,20 @@ export const createUser = async (req, res) => {
     });
 
     await newUser.save();
-
+    console.log("✅ User created:", newUser._id);
     res.status(201).json({ message: "User created successfully", user: newUser });
   } catch (error) {
+    console.error("❌ createUser error:", error.message || error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
-// @desc    Update user
-// @route   PUT /api/users/:id
-// @access  Admin
+// Update user (Admin only)
 export const updateUser = async (req, res) => {
   try {
+    console.log(`📢 updateUser called for id: ${req.params.id}`);
+    await connectToDatabase(process.env.MONGO_URI);
+
     const { id } = req.params;
     const { name, email, password, role } = req.body;
 
@@ -71,24 +80,27 @@ export const updateUser = async (req, res) => {
     }
 
     await user.save();
-
+    console.log("✅ User updated:", user._id);
     res.status(200).json({ message: "User updated successfully", user });
   } catch (error) {
+    console.error("❌ updateUser error:", error.message || error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
-// @desc    Delete user
-// @route   DELETE /api/users/:id
-
+// Delete user (Admin only)
 export const deleteUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id); // delete directly
+    console.log(`📢 deleteUser called for id: ${req.params.id}`);
+    await connectToDatabase(process.env.MONGO_URI);
+
+    const user = await User.findByIdAndDelete(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
+    console.log("✅ User deleted:", user._id);
     res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
+    console.error("❌ deleteUser error:", error.message || error);
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };

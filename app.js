@@ -1,5 +1,4 @@
 import express from "express";
-import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -19,26 +18,29 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ CORS Middleware (for both frontend and localhost)
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://event-booking-frontend-kappa.vercel.app",
-  ],
-  credentials: true,
-}));
+// ✅ Allowed origins
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://event-booking-frontend-kappa.vercel.app",
+];
 
-// Optional: Ensure every response has credentials headers (Vercel-safe)
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "https://event-booking-frontend-kappa.vercel.app");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-  );
-  next();
-});
+// ✅ CORS Middleware
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (Postman, curl, mobile apps)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) === -1) {
+        console.warn(`🚫 CORS blocked: ${origin}`);
+        const msg = `The CORS policy does not allow access from ${origin}`;
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+  })
+);
 
 // Middlewares
 app.use(express.json());
@@ -47,7 +49,7 @@ app.use(cookieParser());
 // Serve uploads folder
 app.use("/uploads", express.static(path.join(__dirname, "public", "uploads")));
 
-// API Routes
+// ✅ API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api", frontendRoutes);
 app.use("/api/admin", backendRoutes);
@@ -57,20 +59,22 @@ app.get("/", (req, res) => {
   res.send("Event Booking Backend is running!");
 });
 
-// MongoDB Connection & Start Server
-mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    console.log("✅ MongoDB connected");
-    app.listen(process.env.PORT || 3000, () => {
-      console.log(`🚀 Server running on port ${process.env.PORT || 3000}`);
-    });
-  })
-  .catch((err) => {
-    console.error("❌ MongoDB connection failed:", err);
-  });
+// ✅ Start server (DB connection happens inside controllers)
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
+
+// Optional: Listen to Mongoose connection events (useful locally)
+import mongoose from "mongoose";
+mongoose.connection.on("connected", () => {
+  console.log("✅ MongoDB connection is active");
+});
+mongoose.connection.on("error", (err) => {
+  console.error("❌ MongoDB connection error:", err);
+});
+mongoose.connection.on("disconnected", () => {
+  console.warn("⚠️ MongoDB disconnected");
+});
 
 export default app;

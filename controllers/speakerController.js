@@ -1,10 +1,15 @@
+// controllers/speakersController.js
 import User from "../models/User.js";
+import connectToDatabase from "../utils/db.js";
 
 // ------------------ Speaker CRUD ------------------
 
 // Create speaker
 export const createSpeaker = async (req, res) => {
   try {
+    console.log("📢 createSpeaker request received");
+    await connectToDatabase(process.env.MONGO_URI);
+
     const { name, username, email, password, bio, expertise, schedules } = req.body;
 
     const userExists = await User.findOne({ email });
@@ -19,19 +24,23 @@ export const createSpeaker = async (req, res) => {
       bio,
       expertise: expertise ? expertise.split(",").map(e => e.trim()) : [],
       schedules: schedules ? JSON.parse(schedules) : [],
-      photo: req.file ? `/uploads/${req.file.filename}` : null, // ✅ save uploaded photo
+      photo: req.file ? `/uploads/${req.file.filename}` : null,
     });
 
+    console.log("✅ Speaker created:", speaker);
     res.status(201).json(speaker);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
+    console.error("❌ createSpeaker error:", error.message || error);
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
 // Update speaker
 export const updateSpeaker = async (req, res) => {
   try {
+    console.log(`📢 updateSpeaker request received for ID ${req.params.id}`);
+    await connectToDatabase(process.env.MONGO_URI);
+
     const speaker = await User.findById(req.params.id);
     if (!speaker || speaker.role !== "speaker")
       return res.status(404).json({ message: "Speaker not found" });
@@ -45,66 +54,66 @@ export const updateSpeaker = async (req, res) => {
     speaker.bio = bio || speaker.bio;
     if (expertise) speaker.expertise = expertise.split(",").map(e => e.trim());
     if (schedules) speaker.schedules = JSON.parse(schedules);
-
-    // ✅ update photo if new file uploaded
-    if (req.file) {
-      speaker.photo = `/uploads/${req.file.filename}`;
-    }
+    if (req.file) speaker.photo = `/uploads/${req.file.filename}`;
 
     await speaker.save();
+    console.log("✅ Speaker updated:", speaker);
     res.json(speaker);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
+    console.error("❌ updateSpeaker error:", error.message || error);
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
-
-
+// Delete speaker
 export const deleteSpeaker = async (req, res) => {
   try {
-    const { id } = req.params;
+    console.log(`📢 deleteSpeaker request received for ID ${req.params.id}`);
+    await connectToDatabase(process.env.MONGO_URI);
 
-    // Optional: validate ObjectId to avoid cast errors
-    // if (!mongoose.isValidObjectId(id)) {
-    //   return res.status(400).json({ message: "Invalid speaker id" });
-    // }
+    const speaker = await User.findOne({ _id: req.params.id, role: "speaker" });
+    if (!speaker) return res.status(404).json({ message: "Speaker not found" });
 
-    // Ensure it’s actually a speaker
-    const speaker = await User.findOne({ _id: id, role: "speaker" });
-    if (!speaker) {
-      return res.status(404).json({ message: "Speaker not found" });
-    }
-
-    // Delete using modern API
-    await speaker.deleteOne(); // or: await User.deleteOne({ _id: id });
-    // or: const deleted = await User.findOneAndDelete({ _id: id, role: "speaker" });
-
-    return res.json({ message: "Speaker deleted successfully" });
+    await speaker.deleteOne();
+    console.log("✅ Speaker deleted:", req.params.id);
+    res.json({ message: "Speaker deleted successfully" });
   } catch (err) {
-    console.error("deleteSpeaker error:", err);
-    return res.status(500).json({ message: err.message || "Internal server error" });
+    console.error("❌ deleteSpeaker error:", err.message || err);
+    res.status(500).json({ message: err.message || "Internal server error" });
   }
 };
-
 
 // Get all speakers
 export const getAllSpeakers = async (req, res) => {
   try {
-    const speakers = await User.find({ role: "speaker" }); // <-- important
+    console.log("📢 getAllSpeakers request received");
+    await connectToDatabase(process.env.MONGO_URI);
+
+    const speakers = await User.find({ role: "speaker" });
+    console.log(`✅ Fetched ${speakers.length} speakers`);
     res.json(speakers);
   } catch (error) {
+    console.error("❌ getAllSpeakers error:", error.message || error);
     res.status(500).json({ message: error.message });
   }
 };
 
-
 // Get speaker by ID
 export const getSpeakerById = async (req, res) => {
-  const speaker = await User.findById(req.params.id);
-  if (!speaker || speaker.role !== "speaker")
-    return res.status(404).json({ message: "Speaker not found" });
-  res.json(speaker);
+  try {
+    console.log(`📢 getSpeakerById request for ID ${req.params.id}`);
+    await connectToDatabase(process.env.MONGO_URI);
+
+    const speaker = await User.findById(req.params.id);
+    if (!speaker || speaker.role !== "speaker")
+      return res.status(404).json({ message: "Speaker not found" });
+
+    console.log("✅ Speaker fetched:", speaker);
+    res.json(speaker);
+  } catch (error) {
+    console.error("❌ getSpeakerById error:", error.message || error);
+    res.status(500).json({ message: error.message });
+  }
 };
 
 // ------------------ Schedule Management ------------------
@@ -112,14 +121,20 @@ export const getSpeakerById = async (req, res) => {
 // Add schedule
 export const addScheduleToSpeaker = async (req, res) => {
   try {
+    console.log(`📢 addScheduleToSpeaker for ID ${req.params.id}`);
+    await connectToDatabase(process.env.MONGO_URI);
+
     const speaker = await User.findById(req.params.id);
     if (!speaker || speaker.role !== "speaker")
       return res.status(404).json({ message: "Speaker not found" });
 
     speaker.schedules.push(req.body);
     await speaker.save();
+
+    console.log("✅ Schedule added:", req.body);
     res.status(201).json(speaker);
   } catch (error) {
+    console.error("❌ addScheduleToSpeaker error:", error.message || error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -127,6 +142,9 @@ export const addScheduleToSpeaker = async (req, res) => {
 // Update schedule
 export const updateScheduleForSpeaker = async (req, res) => {
   try {
+    console.log(`📢 updateScheduleForSpeaker for ID ${req.params.id}, schedule ${req.params.scheduleId}`);
+    await connectToDatabase(process.env.MONGO_URI);
+
     const speaker = await User.findById(req.params.id);
     if (!speaker || speaker.role !== "speaker")
       return res.status(404).json({ message: "Speaker not found" });
@@ -136,8 +154,11 @@ export const updateScheduleForSpeaker = async (req, res) => {
 
     Object.assign(schedule, req.body);
     await speaker.save();
+
+    console.log("✅ Schedule updated:", schedule);
     res.json(speaker);
   } catch (error) {
+    console.error("❌ updateScheduleForSpeaker error:", error.message || error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -145,6 +166,9 @@ export const updateScheduleForSpeaker = async (req, res) => {
 // Delete schedule
 export const deleteScheduleForSpeaker = async (req, res) => {
   try {
+    console.log(`📢 deleteScheduleForSpeaker for ID ${req.params.id}, schedule ${req.params.scheduleId}`);
+    await connectToDatabase(process.env.MONGO_URI);
+
     const speaker = await User.findById(req.params.id);
     if (!speaker || speaker.role !== "speaker")
       return res.status(404).json({ message: "Speaker not found" });
@@ -154,8 +178,11 @@ export const deleteScheduleForSpeaker = async (req, res) => {
 
     schedule.deleteOne();
     await speaker.save();
+
+    console.log("✅ Schedule deleted:", req.params.scheduleId);
     res.json(speaker);
   } catch (error) {
+    console.error("❌ deleteScheduleForSpeaker error:", error.message || error);
     res.status(500).json({ message: error.message });
   }
 };
