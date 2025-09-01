@@ -42,7 +42,7 @@ app.use("/api/admin", backendRoutes);
 
 // Root route
 app.get("/", (req, res) => {
-  res.send("Event Booking Backend is running!");
+  res.send("Event Booking Backend is running!!!!");
 });
 
 // ✅ MongoDB Connection FIRST, then start server
