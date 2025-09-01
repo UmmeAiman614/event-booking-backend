@@ -19,10 +19,11 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:5173", 
-    "https://event-booking-frontend.vercel.app"  // your deployed frontend URL
+    "https://event-booking-frontend-git-main-ummeaiman614-3974s-projects.vercel.app"
   ],
   credentials: true
 }));
+
 
 // Get __dirname equivalent in ES module
 const __filename = fileURLToPath(import.meta.url);
