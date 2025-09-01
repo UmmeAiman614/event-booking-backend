@@ -15,15 +15,29 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Allow both localhost (dev) and Vercel frontend
-app.use(cors({
-  origin: [
-    "http://localhost:5173", 
-    "https://event-booking-frontend-git-main-ummeaiman614-3974s-projects.vercel.app"
-  ],
-  credentials: true
-}));
+// ✅ Strong CORS middleware (handles preflight too)
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://event-booking-frontend-kappa.vercel.app");
+  res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
 
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
+// (Optional) keep normal cors() for localhost/dev use
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://event-booking-frontend-kappa.vercel.app",
+    ],
+    credentials: true,
+  })
+);
 
 // Get __dirname equivalent in ES module
 const __filename = fileURLToPath(import.meta.url);
@@ -47,18 +61,19 @@ app.get("/", (req, res) => {
 });
 
 // ✅ MongoDB Connection FIRST, then start server
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => {
-  console.log("✅ MongoDB connected");
-  app.listen(process.env.PORT || 3000, () => {
-    console.log(`🚀 Server running on port ${process.env.PORT || 3000}`);
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("✅ MongoDB connected");
+    app.listen(process.env.PORT || 3000, () => {
+      console.log(`🚀 Server running on port ${process.env.PORT || 3000}`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB connection failed:", err);
   });
-})
-.catch((err) => {
-  console.error("❌ MongoDB connection failed:", err);
-});
 
 export default app;
