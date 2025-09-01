@@ -15,33 +15,30 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Strong CORS middleware (handles preflight too)
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://event-booking-frontend-kappa.vercel.app");
-  res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  res.header("Access-Control-Allow-Credentials", "true");
-
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-  next();
-});
-
-// (Optional) keep normal cors() for localhost/dev use
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://event-booking-frontend-kappa.vercel.app",
-    ],
-    credentials: true,
-  })
-);
-
-// Get __dirname equivalent in ES module
+// Get __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// ✅ CORS Middleware (for both frontend and localhost)
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://event-booking-frontend-kappa.vercel.app",
+  ],
+  credentials: true,
+}));
+
+// Optional: Ensure every response has credentials headers (Vercel-safe)
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "https://event-booking-frontend-kappa.vercel.app");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  next();
+});
 
 // Middlewares
 app.use(express.json());
@@ -57,10 +54,10 @@ app.use("/api/admin", backendRoutes);
 
 // Root route
 app.get("/", (req, res) => {
-  res.send("Event Booking Backend is running!!!!");
+  res.send("Event Booking Backend is running!");
 });
 
-// ✅ MongoDB Connection FIRST, then start server
+// MongoDB Connection & Start Server
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
