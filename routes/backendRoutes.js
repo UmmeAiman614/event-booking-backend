@@ -31,7 +31,7 @@ router.delete("/events/:id",protect, adminOnly,eventController.deleteEvent);
 router.post("/events/:id/schedules",protect,adminOnly, eventController.addSchedule);
 router.put("/events/:id/schedules/:sid", protect,adminOnly,eventController.updateSchedule);
 router.delete("/events/:id/schedules/:sid",protect,adminOnly, eventController.deleteSchedule);
-router.get("/events/count", eventController.getEventsCount);
+router.get("/events/count", protect, adminOnly, eventController.getEventsCount);
 
 
 
@@ -40,7 +40,7 @@ router.get("/events/count", eventController.getEventsCount);
 // Admin-only routes
 router.post("/speakers", protect, adminOnly, upload.single("photo"), speakerController.createSpeaker);
 router.delete("/speakers/:id", protect, adminOnly, speakerController.deleteSpeaker);
-router.get("/speakers/count", speakerController.getSpeakersCount);
+router.get("/speakers/count", protect, adminOnly, speakerController.getSpeakersCount);
 
 // Admin-only schedule management
 router.post("/speakers/:id/schedules", protect, adminOnly, speakerController.addScheduleToSpeaker);
@@ -53,31 +53,31 @@ router.delete("/speakers/:id/schedules/:sid", protect, adminOnly, speakerControl
 router.get("/bookings",protect, adminOnly, bookingController.getAllBookings);
 router.put("/bookings/:id/approve",protect, bookingController.approveBooking);
 router.put("/bookings/:id/reject", protect, bookingController.rejectBooking);
-router.get("/bookings/count", bookingController.getBookingsCount);
+router.get("/bookings/count", protect, adminOnly, bookingController.getBookingsCount);
 
 // Blogs
 router.post("/blogs", protect, adminOnly,upload.single("photo"), blogController.createBlog);
 router.put("/blogs/:id", protect, adminOnly,upload.single("photo"), blogController.updateBlog);
 router.delete("/blogs/:id", protect, adminOnly,blogController.deleteBlog);
-router.get("/blogs/count", blogController.getBlogsCount);
+router.get("/blogs/count", protect, adminOnly, blogController.getBlogsCount);
 
 // Comments
 
 router.get("/comments", protect, adminOnly, commentController.getAllComments);
 router.put("/comments/:id/approve", protect, adminOnly, commentController.approveComment);
 router.delete("/comments/:id", protect, adminOnly, commentController.deleteComment);
-router.get("/comments/count", commentController.getCommentsCount);
+router.get("/comments/count", protect, adminOnly, commentController.getCommentsCount);
 
 // About
 router.put("/about",protect, adminOnly, aboutController.updateAbout);
-router.get("/about/count", aboutController.getAboutCount);
+router.get("/about/count", protect, adminOnly, aboutController.getAboutCount);
 
 
 // Admin: Manage contacts/messages
 router.get("/contacts", protect, adminOnly, contactController.getAllContacts);
 router.delete("/contacts/:id", protect, adminOnly, contactController.deleteContact);
 router.put("/contacts/:id/read", protect, adminOnly, contactController.markAsRead);
-router.get("/contacts/count", contactController.getContactsCount);
+router.get("/contacts/count", protect, adminOnly, contactController.getContactsCount);
 
 
 export default router;
