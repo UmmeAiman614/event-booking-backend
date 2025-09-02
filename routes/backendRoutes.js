@@ -25,8 +25,8 @@ router.delete("/users/:id",protect, adminOnly,userController.deleteUser);
 
 // Events
 router.get("/events",protect,adminOnly, eventController.getAllEvents);
-router.post("/events",protect,adminOnly, eventController.createEvent);
-router.put("/events/:id",protect, adminOnly,eventController.updateEvent);
+router.post("/events",protect,adminOnly, upload.single("image"),eventController.createEvent);
+router.put("/events/:id",protect,adminOnly, upload.single("image"), adminOnly,eventController.updateEvent);
 router.delete("/events/:id",protect, adminOnly,eventController.deleteEvent);
 router.post("/events/:id/schedules",protect,adminOnly, eventController.addSchedule);
 router.put("/events/:id/schedules/:sid", protect,adminOnly,eventController.updateSchedule);

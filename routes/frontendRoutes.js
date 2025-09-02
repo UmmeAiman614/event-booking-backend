@@ -16,8 +16,8 @@ const router = express.Router();
 
 // Public + User Routes
 router.get("/users", userController.getAllUsers);
-router.get("/events", eventController.getAllEvents);
-router.get("/events/:id", eventController.getEventById);
+router.get("/events", upload.single("image"),eventController.getAllEvents);
+router.get("/events/:id", upload.single("image"), eventController.getEventById);
 
 router.get("/speakers", speakerController.getAllSpeakers);
 router.get("/speakers/:id", speakerController.getSpeakerById);

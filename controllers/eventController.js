@@ -37,13 +37,40 @@ export const getEventById = async (req, res) => {
   }
 };
 
+// Create new event with image
 // Create new event
 export const createEvent = async (req, res) => {
   try {
     console.log("📢 createEvent called");
     await connectToDatabase(process.env.MONGO_URI);
 
-    const newEvent = new Event(req.body);
+    console.log("📦 req.body:", req.body);
+    console.log("📷 req.file:", req.file);
+
+    const { title, description, date, location, totalSeats, schedules } = req.body;
+
+    // Validate required fields
+    if (!title || !date || !totalSeats) {
+      console.warn("⚠️ Missing required fields", { title, date, totalSeats });
+      return res.status(400).json({
+        message: "Title, date, and totalSeats are required",
+      });
+    }
+
+    const eventData = {
+      title,
+      description,
+      date,
+      location,
+      totalSeats,
+      availableSeats: totalSeats, // remaining seats
+      schedules: schedules ? JSON.parse(schedules) : [],
+      image: req.file ? `/uploads/${req.file.filename}` : undefined, // clean relative path
+    };
+
+    console.log("📝 eventData prepared for DB:", eventData);
+
+    const newEvent = new Event(eventData);
     await newEvent.save();
 
     console.log("✅ Event created:", newEvent._id);
@@ -54,17 +81,37 @@ export const createEvent = async (req, res) => {
   }
 };
 
-// Update event
+// Update existing event
 export const updateEvent = async (req, res) => {
   try {
     console.log(`📢 updateEvent called with id: ${req.params.id}`);
     await connectToDatabase(process.env.MONGO_URI);
 
-    const updatedEvent = await Event.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    console.log("📦 req.body:", req.body);
+    console.log("📷 req.file:", req.file);
+
+    const { title, description, date, location, totalSeats, schedules } = req.body;
+
+    const updateData = {
+      title,
+      description,
+      date,
+      location,
+      totalSeats,
+      schedules: schedules ? JSON.parse(schedules) : [],
+    };
+
+    if (req.file) {
+      updateData.image = `/uploads/${req.file.filename}`; // update with new image
+    }
+
+    console.log("📝 updateData prepared for DB:", updateData);
+
+    const updatedEvent = await Event.findByIdAndUpdate(req.params.id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
     if (!updatedEvent) {
       console.warn("🚫 Event not found:", req.params.id);
       return res.status(404).json({ message: "Event not found" });
@@ -77,6 +124,8 @@ export const updateEvent = async (req, res) => {
     res.status(400).json({ message: "Error updating event", error: err.message });
   }
 };
+
+
 
 // Delete event
 export const deleteEvent = async (req, res) => {

@@ -1,4 +1,3 @@
-// models/Event.js
 import mongoose from "mongoose";
 
 const scheduleSchema = new mongoose.Schema(
@@ -17,13 +16,13 @@ const eventSchema = new mongoose.Schema(
     description: { type: String, trim: true },
     date: { type: Date, required: true },
     location: { type: String, trim: true },
+    image: { type: String, trim: true }, // <-- new field for image path
     schedules: [scheduleSchema],
-    totalSeats: { type: Number, required: true, default: 100 },      // total capacity
-    availableSeats: { type: Number, required: true, default: 100 },  // remaining seats
+    totalSeats: { type: Number, required: true, default: 100 },
+    availableSeats: { type: Number, required: true, default: 100 },
   },
-  { timestamps: true } // createdAt + updatedAt
+  { timestamps: true }
 );
 
 const Event = mongoose.model("Event", eventSchema);
-
 export default Event;
