@@ -165,3 +165,12 @@ export const deleteSchedule = async (req, res) => {
     res.status(500).json({ message: "Error deleting schedule", error: err.message });
   }
 };
+
+export const getEventsCount = async (req, res) => {
+  try {
+    const count = await Event.countDocuments();
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

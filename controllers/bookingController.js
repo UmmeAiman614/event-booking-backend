@@ -96,11 +96,21 @@ export const approveBooking = async (req, res) => {
     console.log(`📢 approveBooking request for ID: ${req.params.id}`);
     await connectToDatabase(process.env.MONGO_URI);
 
-    const booking = await Booking.findById(req.params.id);
+    const booking = await Booking.findById(req.params.id).populate("event");
     if (!booking) return res.status(404).json({ message: "Booking not found" });
 
-    booking.status = "approved";
-    await booking.save();
+    if (booking.status !== "approved") {
+      booking.status = "approved";
+
+      // ✅ Decrease available seats in the event
+      if (booking.event && booking.event.availableSeats != null) {
+        booking.event.availableSeats -= booking.quantity;
+        if (booking.event.availableSeats < 0) booking.event.availableSeats = 0; // prevent negative
+        await booking.event.save();
+      }
+
+      await booking.save();
+    }
 
     console.log("✅ Booking approved:", booking._id);
     res.json(booking);
@@ -116,8 +126,16 @@ export const rejectBooking = async (req, res) => {
     console.log(`📢 rejectBooking request for ID: ${req.params.id}`);
     await connectToDatabase(process.env.MONGO_URI);
 
-    const booking = await Booking.findById(req.params.id);
+    const booking = await Booking.findById(req.params.id).populate("event");
     if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+    if (booking.status === "approved") {
+      // ✅ If previously approved, restore seats
+      if (booking.event && booking.event.availableSeats != null) {
+        booking.event.availableSeats += booking.quantity;
+        await booking.event.save();
+      }
+    }
 
     booking.status = "rejected";
     await booking.save();
@@ -126,6 +144,16 @@ export const rejectBooking = async (req, res) => {
     res.json(booking);
   } catch (error) {
     console.error("❌ rejectBooking error:", error.message || error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+export const getBookingsCount = async (req, res) => {
+  try {
+    const count = await Booking.countDocuments();
+    res.json({ count });
+  } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };

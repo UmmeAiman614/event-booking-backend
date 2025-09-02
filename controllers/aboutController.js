@@ -58,3 +58,11 @@ export const updateAbout = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+export const getAboutCount = async (req, res) => {
+  try {
+    const count = await About.countDocuments();
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

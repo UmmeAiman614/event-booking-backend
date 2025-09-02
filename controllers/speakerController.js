@@ -186,3 +186,12 @@ export const deleteScheduleForSpeaker = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getSpeakersCount = async (req, res) => {
+  try {
+    const count = await User.countDocuments({ role: "speaker" });
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

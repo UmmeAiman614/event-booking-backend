@@ -128,3 +128,12 @@ export const getCommentsByBlogId = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch comments" });
   }
 };
+
+export const getCommentsCount = async (req, res) => {
+  try {
+    const count = await Comment.countDocuments();
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

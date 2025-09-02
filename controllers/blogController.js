@@ -126,3 +126,12 @@ export const deleteBlog = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getBlogsCount = async (req, res) => {
+  try {
+    const count = await Blog.countDocuments();
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

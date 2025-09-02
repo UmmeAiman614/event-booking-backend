@@ -18,8 +18,10 @@ const eventSchema = new mongoose.Schema(
     date: { type: Date, required: true },
     location: { type: String, trim: true },
     schedules: [scheduleSchema],
+    totalSeats: { type: Number, required: true, default: 100 },      // total capacity
+    availableSeats: { type: Number, required: true, default: 100 },  // remaining seats
   },
-  { timestamps: true } // replaces createdAt with createdAt + updatedAt
+  { timestamps: true } // createdAt + updatedAt
 );
 
 const Event = mongoose.model("Event", eventSchema);

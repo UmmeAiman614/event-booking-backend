@@ -112,3 +112,11 @@ export const markAsRead = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+export const getContactsCount = async (req, res) => {
+  try {
+    const count = await Contact.countDocuments();
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

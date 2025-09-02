@@ -18,7 +18,8 @@ const router = express.Router();
 
 
 //Users
-router.post("/users",adminOnly,userController.createUser);
+router.get("/users/count",adminOnly, protect, userController.getUsersCount);
+router.post("/users",adminOnly,protect, userController.createUser);
 router.put("/users/:id",protect, adminOnly,userController.updateUser);
 router.delete("/users/:id",protect, adminOnly,userController.deleteUser);
 
@@ -30,6 +31,8 @@ router.delete("/events/:id",protect, adminOnly,eventController.deleteEvent);
 router.post("/events/:id/schedules",protect,adminOnly, eventController.addSchedule);
 router.put("/events/:id/schedules/:sid", protect,adminOnly,eventController.updateSchedule);
 router.delete("/events/:id/schedules/:sid",protect,adminOnly, eventController.deleteSchedule);
+router.get("/events/count", eventController.getEventsCount);
+
 
 
 // ----------------- Speakers -----------------
@@ -37,6 +40,7 @@ router.delete("/events/:id/schedules/:sid",protect,adminOnly, eventController.de
 // Admin-only routes
 router.post("/speakers", protect, adminOnly, upload.single("photo"), speakerController.createSpeaker);
 router.delete("/speakers/:id", protect, adminOnly, speakerController.deleteSpeaker);
+router.get("/speakers/count", speakerController.getSpeakersCount);
 
 // Admin-only schedule management
 router.post("/speakers/:id/schedules", protect, adminOnly, speakerController.addScheduleToSpeaker);
@@ -49,25 +53,31 @@ router.delete("/speakers/:id/schedules/:sid", protect, adminOnly, speakerControl
 router.get("/bookings",protect, adminOnly, bookingController.getAllBookings);
 router.put("/bookings/:id/approve",protect, bookingController.approveBooking);
 router.put("/bookings/:id/reject", protect, bookingController.rejectBooking);
+router.get("/bookings/count", bookingController.getBookingsCount);
 
 // Blogs
 router.post("/blogs", protect, adminOnly,upload.single("photo"), blogController.createBlog);
 router.put("/blogs/:id", protect, adminOnly,upload.single("photo"), blogController.updateBlog);
 router.delete("/blogs/:id", protect, adminOnly,blogController.deleteBlog);
+router.get("/blogs/count", blogController.getBlogsCount);
 
 // Comments
 
 router.get("/comments", protect, adminOnly, commentController.getAllComments);
 router.put("/comments/:id/approve", protect, adminOnly, commentController.approveComment);
 router.delete("/comments/:id", protect, adminOnly, commentController.deleteComment);
+router.get("/comments/count", commentController.getCommentsCount);
 
 // About
 router.put("/about",protect, adminOnly, aboutController.updateAbout);
+router.get("/about/count", aboutController.getAboutCount);
+
 
 // Admin: Manage contacts/messages
 router.get("/contacts", protect, adminOnly, contactController.getAllContacts);
 router.delete("/contacts/:id", protect, adminOnly, contactController.deleteContact);
 router.put("/contacts/:id/read", protect, adminOnly, contactController.markAsRead);
+router.get("/contacts/count", contactController.getContactsCount);
 
 
 export default router;
