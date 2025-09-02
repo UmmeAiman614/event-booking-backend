@@ -60,6 +60,7 @@ export const updateAbout = async (req, res) => {
 };
 export const getAboutCount = async (req, res) => {
   try {
+    await connectToDatabase(process.env.MONGO_URI);
     const count = await About.countDocuments();
     res.json({ count });
   } catch (error) {

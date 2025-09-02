@@ -107,6 +107,7 @@ export const deleteUser = async (req, res) => {
 
 export const getUsersCount = async (req, res) => {
   try {
+    await connectToDatabase(process.env.MONGO_URI);
     const count = await User.countDocuments();
     res.json({ count });
   } catch (error) {

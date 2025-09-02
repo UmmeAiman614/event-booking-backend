@@ -151,6 +151,7 @@ export const rejectBooking = async (req, res) => {
 
 export const getBookingsCount = async (req, res) => {
   try {
+    await connectToDatabase(process.env.MONGO_URI);
     const count = await Booking.countDocuments();
     res.json({ count });
   } catch (error) {

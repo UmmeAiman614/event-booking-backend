@@ -189,6 +189,7 @@ export const deleteScheduleForSpeaker = async (req, res) => {
 
 export const getSpeakersCount = async (req, res) => {
   try {
+    await connectToDatabase(process.env.MONGO_URI);
     const count = await User.countDocuments({ role: "speaker" });
     res.json({ count });
   } catch (error) {

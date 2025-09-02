@@ -114,6 +114,7 @@ export const markAsRead = async (req, res) => {
 };
 export const getContactsCount = async (req, res) => {
   try {
+    await connectToDatabase(process.env.MONGO_URI);
     const count = await Contact.countDocuments();
     res.json({ count });
   } catch (error) {

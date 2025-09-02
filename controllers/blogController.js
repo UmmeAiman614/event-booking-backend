@@ -129,6 +129,7 @@ export const deleteBlog = async (req, res) => {
 
 export const getBlogsCount = async (req, res) => {
   try {
+    await connectToDatabase(process.env.MONGO_URI);
     const count = await Blog.countDocuments();
     res.json({ count });
   } catch (error) {

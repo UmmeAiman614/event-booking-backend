@@ -131,6 +131,7 @@ export const getCommentsByBlogId = async (req, res) => {
 
 export const getCommentsCount = async (req, res) => {
   try {
+    await connectToDatabase(process.env.MONGO_URI);
     const count = await Comment.countDocuments();
     res.json({ count });
   } catch (error) {
