@@ -65,7 +65,7 @@ export const createEvent = async (req, res) => {
       totalSeats,
       availableSeats: totalSeats, // remaining seats
       schedules: schedules ? JSON.parse(schedules) : [],
-      image: req.file ? `/uploads/${req.file.filename}` : undefined, // clean relative path
+      image: req.file ? `uploads/${req.file.filename}` : undefined, // clean relative path
     };
 
     console.log("📝 eventData prepared for DB:", eventData);
@@ -102,7 +102,7 @@ export const updateEvent = async (req, res) => {
     };
 
     if (req.file) {
-      updateData.image = `/uploads/${req.file.filename}`; // update with new image
+      updateData.image = `uploads/${req.file.filename}`; // update with new image
     }
 
     console.log("📝 updateData prepared for DB:", updateData);

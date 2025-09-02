@@ -23,7 +23,7 @@ router.get("/speakers", speakerController.getAllSpeakers);
 router.get("/speakers/:id", speakerController.getSpeakerById);
 router.put("/speakers/:id", upload.single("photo"), speakerController.updateSpeaker);
 
-router.post("/bookings", protect, bookingController.bookEvent);
+router.post("/bookings/:eventId", protect, bookingController.bookEvent);
 router.get("/my-bookings", protect, bookingController.getMyBookings);
 router.get("/bookings/user/:userId", protect, bookingController.getBookingsByUser);
 

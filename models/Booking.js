@@ -3,9 +3,9 @@ import mongoose from "mongoose";
 
 const bookingSchema = new mongoose.Schema(
   {
-    event: { type: mongoose.Schema.Types.ObjectId, ref: "Event", default: null }, 
+    event: { type: mongoose.Schema.Types.ObjectId, ref: "Event", required: true }, // always required now
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    ticketType: { type: String, required: true }, 
+    ticketType: { type: String, required: true },
     quantity: { type: Number, required: true, default: 1 },
     totalPrice: { type: Number, required: true },
     status: {
@@ -14,9 +14,6 @@ const bookingSchema = new mongoose.Schema(
       default: "pending",
     },
     bookedAt: { type: Date, default: Date.now },
-
-    // ✅ Add availableSeats field (optional, for easy reference)
-    availableSeats: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

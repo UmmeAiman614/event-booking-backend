@@ -4,12 +4,15 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
 import { fileURLToPath } from "url";
-
+import bodyParser from "body-parser";
 // Routes
 import authRoutes from "./routes/authRoutes.js";
 import frontendRoutes from "./routes/frontendRoutes.js";
 import backendRoutes from "./routes/backendRoutes.js";
 
+dotenv.config();
+
+// ...
 dotenv.config();
 
 const app = express();
@@ -28,9 +31,7 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (Postman, curl, mobile apps)
       if (!origin) return callback(null, true);
-
       if (allowedOrigins.indexOf(origin) === -1) {
         console.warn(`🚫 CORS blocked: ${origin}`);
         const msg = `The CORS policy does not allow access from ${origin}`;
@@ -42,13 +43,16 @@ app.use(
   })
 );
 
-// Middlewares
 app.use(express.json());
 app.use(cookieParser());
-
+app.use(bodyParser.urlencoded({ extended: true })); // for form-data
 // Serve uploads folder
 app.use("/uploads", express.static(path.join(__dirname, "public", "uploads")));
-
+// Log every request hitting the backend
+app.use((req, res, next) => {
+  console.log(`📩 ${req.method} ${req.originalUrl}`);
+  next();
+});
 // ✅ API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api", frontendRoutes);
@@ -59,13 +63,13 @@ app.get("/", (req, res) => {
   res.send("Event Booking Backend is running!");
 });
 
-// ✅ Start server (DB connection happens inside controllers)
+// ✅ Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
 
-// Optional: Listen to Mongoose connection events (useful locally)
+// Optional: Mongoose logs
 import mongoose from "mongoose";
 mongoose.connection.on("connected", () => {
   console.log("✅ MongoDB connection is active");

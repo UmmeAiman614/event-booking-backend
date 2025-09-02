@@ -6,38 +6,38 @@ import connectToDatabase from "../utils/db.js";
 // -------------------- Booking CRUD --------------------
 
 // Book an event
-export const bookEvent = async (req, res) => {
-  try {
-    console.log(`📢 bookEvent request received for eventId: ${req.params.eventId}`);
-    await connectToDatabase(process.env.MONGO_URI);
+// export const bookEvent = async (req, res) => {
+//   try {
+//     console.log(`📢 bookEvent request received for eventId: ${req.params.eventId}`);
+//     await connectToDatabase(process.env.MONGO_URI);
 
-    const { quantity, totalPrice, ticketType } = req.body;
+//     const { quantity, totalPrice, ticketType } = req.body;
 
-    let event = null;
-    if (req.params.eventId) {
-      event = await Event.findById(req.params.eventId);
-      if (!event) {
-        console.warn("🚫 Event not found:", req.params.eventId);
-        return res.status(404).json({ message: "Event not found" });
-      }
-    }
+//     let event = null;
+//     if (req.params.eventId) {
+//       event = await Event.findById(req.params.eventId);
+//       if (!event) {
+//         console.warn("🚫 Event not found:", req.params.eventId);
+//         return res.status(404).json({ message: "Event not found" });
+//       }
+//     }
 
-    const booking = new Booking({
-      event: event ? event._id : null,
-      user: req.user._id,
-      ticketType,
-      quantity,
-      totalPrice,
-    });
+//     const booking = new Booking({
+//       event: event ? event._id : null,
+//       user: req.user._id,
+//       ticketType,
+//       quantity,
+//       totalPrice,
+//     });
 
-    await booking.save();
-    console.log("✅ Booking created:", booking._id);
-    res.status(201).json({ message: "Booking submitted for admin approval", booking });
-  } catch (error) {
-    console.error("❌ bookEvent error:", error.message || error);
-    res.status(400).json({ message: error.message });
-  }
-};
+//     await booking.save();
+//     console.log("✅ Booking created:", booking._id);
+//     res.status(201).json({ message: "Booking submitted for admin approval", booking });
+//   } catch (error) {
+//     console.error("❌ bookEvent error:", error.message || error);
+//     res.status(400).json({ message: error.message });
+//   }
+// };
 
 // Get logged-in user’s bookings
 export const getMyBookings = async (req, res) => {
@@ -90,6 +90,43 @@ export const getAllBookings = async (req, res) => {
   }
 };
 
+
+// Book an event
+export const bookEvent = async (req, res) => {
+  try {
+    console.log(`📢 bookEvent request received for eventId: ${req.params.eventId}`);
+    await connectToDatabase(process.env.MONGO_URI);
+
+    const { quantity, totalPrice, ticketType } = req.body;
+
+    // ✅ Event must exist
+    const event = await Event.findById(req.params.eventId);
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    // ✅ Don’t check availableSeats yet — only reduce on approval
+    const booking = new Booking({
+      event: event._id,
+      user: req.user._id,
+      ticketType,
+      quantity,
+      totalPrice,
+    });
+
+    await booking.save();
+    console.log("✅ Booking created:", booking._id);
+
+    res.status(201).json({
+      message: "Booking submitted for admin approval",
+      booking,
+    });
+  } catch (error) {
+    console.error("❌ bookEvent error:", error.message || error);
+    res.status(400).json({ message: error.message });
+  }
+};
+
 // Approve a booking
 export const approveBooking = async (req, res) => {
   try {
@@ -100,15 +137,16 @@ export const approveBooking = async (req, res) => {
     if (!booking) return res.status(404).json({ message: "Booking not found" });
 
     if (booking.status !== "approved") {
-      booking.status = "approved";
-
-      // ✅ Decrease available seats in the event
-      if (booking.event && booking.event.availableSeats != null) {
-        booking.event.availableSeats -= booking.quantity;
-        if (booking.event.availableSeats < 0) booking.event.availableSeats = 0; // prevent negative
-        await booking.event.save();
+      // ✅ Check if enough seats are available
+      if (booking.event.availableSeats < booking.quantity) {
+        return res.status(400).json({ message: "Not enough seats available" });
       }
 
+      booking.status = "approved";
+
+      // ✅ Decrease available seats
+      booking.event.availableSeats -= booking.quantity;
+      await booking.event.save();
       await booking.save();
     }
 
@@ -130,11 +168,9 @@ export const rejectBooking = async (req, res) => {
     if (!booking) return res.status(404).json({ message: "Booking not found" });
 
     if (booking.status === "approved") {
-      // ✅ If previously approved, restore seats
-      if (booking.event && booking.event.availableSeats != null) {
-        booking.event.availableSeats += booking.quantity;
-        await booking.event.save();
-      }
+      // ✅ Restore seats if previously approved
+      booking.event.availableSeats += booking.quantity;
+      await booking.event.save();
     }
 
     booking.status = "rejected";
@@ -147,6 +183,7 @@ export const rejectBooking = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
 export const getBookingsCount = async (req, res) => {

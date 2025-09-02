@@ -18,12 +18,13 @@ const router = express.Router();
 
 //Users
 router.get("/users/count", adminOnly, protect, userController.getUsersCount);
-router.post("/users", adminOnly, protect, userController.createUser);
+router.post("/users", protect, adminOnly,  userController.createUser);
 router.put("/users/:id", protect, adminOnly, userController.updateUser);
 router.delete("/users/:id", protect, adminOnly, userController.deleteUser);
 
 // Events
 router.get("/events", protect, adminOnly, eventController.getAllEvents);
+router.post("/events", protect, adminOnly, upload.single("image"), eventController.createEvent);
 router.put("/events/:id", protect, adminOnly, upload.single("image"), eventController.updateEvent); 
 router.delete("/events/:id", protect, adminOnly, eventController.deleteEvent);
 router.post("/events/:id/schedules", protect, adminOnly, eventController.addSchedule);
@@ -37,6 +38,7 @@ router.get("/events/count", protect, adminOnly, eventController.getEventsCount);
 
 // Admin-only routes
 router.post("/speakers", protect, adminOnly, upload.single("photo"), speakerController.createSpeaker);
+router.put("/speakers/:id", protect, adminOnly, upload.single("photo"), speakerController.updateSpeaker);
 router.delete("/speakers/:id", protect, adminOnly, speakerController.deleteSpeaker);
 router.get("/speakers/count", protect, adminOnly, speakerController.getSpeakersCount);
 

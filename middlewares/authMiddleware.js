@@ -1,6 +1,8 @@
 // middleware/protect.js
+// middleware/protect.js
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import connectToDatabase from "../utils/db.js";
 
 export const protect = async (req, res, next) => {
   let token;
@@ -11,8 +13,10 @@ export const protect = async (req, res, next) => {
   ) {
     try {
       token = req.headers.authorization.split(" ")[1];
-
       console.log("🔑 Incoming token:", token.slice(0, 20) + "...");
+
+      // ✅ Ensure DB connection
+      await connectToDatabase(process.env.MONGO_URI);
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       console.log("✅ JWT decoded:", decoded);
@@ -36,6 +40,7 @@ export const protect = async (req, res, next) => {
   console.warn("⚠️ No token provided in request headers");
   return res.status(401).json({ message: "Not authorized, no token" });
 };
+
 
 // adminOnly.js (simplified)
 export const adminOnly = (req, res, next) => {
