@@ -1,7 +1,7 @@
 // controllers/speakersController.js
 import User from "../models/User.js";
 import connectToDatabase from "../utils/db.js";
-
+import { cloudinary } from "../utils/cloudinary.js"; // Cloudinary instance
 // ------------------ Speaker CRUD ------------------
 
 
@@ -26,6 +26,7 @@ export const createSpeaker = async (req, res) => {
       schedules: schedules ? JSON.parse(schedules) : [],
       photo: req.file ? req.file.path : null, // Cloudinary URL
     });
+console.log("req.file:", req.file);
 
     res.status(201).json(speaker);
   } catch (error) {
@@ -33,7 +34,7 @@ export const createSpeaker = async (req, res) => {
   }
 };
 
-// Update Speaker
+
 export const updateSpeaker = async (req, res) => {
   try {
     await connectToDatabase(process.env.MONGO_URI);
@@ -42,23 +43,36 @@ export const updateSpeaker = async (req, res) => {
     if (!speaker || speaker.role !== "speaker")
       return res.status(404).json({ message: "Speaker not found" });
 
-    const { name, username, email, password, bio, expertise, schedules } = req.body;
+    const { name, email, password, bio, expertise, schedules } = req.body;
 
     speaker.name = name || speaker.name;
-    speaker.username = username || speaker.username;
     speaker.email = email || speaker.email;
     if (password) speaker.password = password;
     speaker.bio = bio || speaker.bio;
-    if (expertise) speaker.expertise = expertise.split(",").map(e => e.trim());
-    if (schedules) speaker.schedules = JSON.parse(schedules);
-    if (req.file) speaker.photo = req.file.path; // Cloudinary URL
+
+    if (expertise) {
+      speaker.expertise = expertise
+        .split(",")
+        .map((e) => e.trim());
+    }
+
+    if (schedules) {
+      speaker.schedules = JSON.parse(schedules);
+    }
+
+    // ✅ assign Cloudinary URL directly
+    if (req.file) {
+      speaker.photo = req.file.path; // multer-storage-cloudinary gives URL here
+    }
 
     await speaker.save();
     res.json(speaker);
   } catch (error) {
+    console.error("UpdateSpeaker Error:", error);
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
 // Delete speaker
