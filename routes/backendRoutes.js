@@ -9,7 +9,7 @@ import * as commentController from "../controllers/commentController.js";
 import * as aboutController from "../controllers/aboutController.js";
 import * as contactController from "../controllers/contactController.js";
 import * as userController from "../controllers/userController.js";
-import upload from "../middlewares/multer.js"; // import multer
+import { upload } from "../utils/cloudinary.js"; // ✅ Cloudinary upload
 import { protect, adminOnly } from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
