@@ -1,24 +1,10 @@
+// middleware/upload.js
 import multer from "multer";
-import path from "path";
-import fs from "fs";
 
-// Ensure public/uploads folder exists
-const uploadDir = path.join(process.cwd(), "public", "uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Use memory storage (file kept in RAM, not disk)
+const storage = multer.memoryStorage();
 
-// Configure storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir); // save files to public/uploads
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // unique filename
-  },
-});
-
-// File filter (images only)
+// Filter for images only
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image/")) {
     cb(null, true);

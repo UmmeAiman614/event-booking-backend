@@ -4,10 +4,10 @@ import connectToDatabase from "../utils/db.js";
 
 // ------------------ Speaker CRUD ------------------
 
-// Create speaker
+
+// Create Speaker
 export const createSpeaker = async (req, res) => {
   try {
-    console.log("📢 createSpeaker request received");
     await connectToDatabase(process.env.MONGO_URI);
 
     const { name, username, email, password, bio, expertise, schedules } = req.body;
@@ -24,21 +24,18 @@ export const createSpeaker = async (req, res) => {
       bio,
       expertise: expertise ? expertise.split(",").map(e => e.trim()) : [],
       schedules: schedules ? JSON.parse(schedules) : [],
-      photo: req.file ? `/uploads/${req.file.filename}` : null,
+      photo: req.file ? req.file.path : null, // Cloudinary URL
     });
 
-    console.log("✅ Speaker created:", speaker);
     res.status(201).json(speaker);
   } catch (error) {
-    console.error("❌ createSpeaker error:", error.message || error);
-    res.status(500).json({ message: "Server Error", error: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 
-// Update speaker
+// Update Speaker
 export const updateSpeaker = async (req, res) => {
   try {
-    console.log(`📢 updateSpeaker request received for ID ${req.params.id}`);
     await connectToDatabase(process.env.MONGO_URI);
 
     const speaker = await User.findById(req.params.id);
@@ -54,16 +51,15 @@ export const updateSpeaker = async (req, res) => {
     speaker.bio = bio || speaker.bio;
     if (expertise) speaker.expertise = expertise.split(",").map(e => e.trim());
     if (schedules) speaker.schedules = JSON.parse(schedules);
-    if (req.file) speaker.photo = `/uploads/${req.file.filename}`;
+    if (req.file) speaker.photo = req.file.path; // Cloudinary URL
 
     await speaker.save();
-    console.log("✅ Speaker updated:", speaker);
     res.json(speaker);
   } catch (error) {
-    console.error("❌ updateSpeaker error:", error.message || error);
-    res.status(500).json({ message: "Server Error", error: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
+
 
 // Delete speaker
 export const deleteSpeaker = async (req, res) => {

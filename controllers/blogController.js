@@ -2,6 +2,7 @@
 import Blog from "../models/Blog.js";
 import connectToDatabase from "../utils/db.js";
 
+
 // Helper to get full image URL
 const getImageUrl = (req, filename) => {
   if (!filename) return null;
@@ -42,10 +43,9 @@ export const getBlogById = async (req, res) => {
   }
 };
 
-// Create a new blog
+// Create Blog
 export const createBlog = async (req, res) => {
   try {
-    console.log("📢 createBlog request received");
     await connectToDatabase(process.env.MONGO_URI);
 
     const { title, content } = req.body;
@@ -53,57 +53,43 @@ export const createBlog = async (req, res) => {
       return res.status(400).json({ message: "Title and content are required" });
     }
 
-    let imagePath = req.file ? `uploads/${req.file.filename}` : "";
-
     const blog = new Blog({
       title,
       content,
       author: req.user._id,
-      image: imagePath,
+      image: req.file ? req.file.path : null, // Cloudinary URL
     });
 
     await blog.save();
-
-    const blogWithFullImage = blog.toObject();
-    blogWithFullImage.image = getImageUrl(req, blog.image);
-
-    console.log("✅ Blog created:", blog.title);
-    res.status(201).json(blogWithFullImage);
+    res.status(201).json(blog);
   } catch (error) {
-    console.error("❌ createBlog error:", error.message || error);
     res.status(400).json({ message: error.message });
   }
 };
 
-// Update a blog
+// Update Blog
 export const updateBlog = async (req, res) => {
   try {
-    console.log(`📢 updateBlog request for ID ${req.params.id}`);
     await connectToDatabase(process.env.MONGO_URI);
 
     const blog = await Blog.findById(req.params.id);
     if (!blog) return res.status(404).json({ message: "Blog not found" });
 
     if (blog.author.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Not authorized to update this blog" });
+      return res.status(403).json({ message: "Not authorized" });
     }
 
     blog.title = req.body.title || blog.title;
     blog.content = req.body.content || blog.content;
-    if (req.file) blog.image = `uploads/${req.file.filename}`;
+    if (req.file) blog.image = req.file.path; // Cloudinary URL
 
     await blog.save();
-
-    const blogWithFullImage = blog.toObject();
-    blogWithFullImage.image = getImageUrl(req, blog.image);
-
-    console.log("✅ Blog updated:", blog.title);
-    res.json(blogWithFullImage);
+    res.json(blog);
   } catch (error) {
-    console.error("❌ updateBlog error:", error.message || error);
     res.status(400).json({ message: error.message });
   }
 };
+
 
 // Delete a blog
 export const deleteBlog = async (req, res) => {
